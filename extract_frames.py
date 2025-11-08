@@ -5,11 +5,6 @@ def sharpness(gray):
     return cv2.Laplacian(gray, cv2.CV_64F).var()
 
 def extract_best_frames(video_path, thresh=0.35, min_gap_sec=8):
-    """
-    - Detecta cambios de escena por diferencia media de fotogramas.
-    - Cada vez que hay cambio, empieza un nuevo segmento.
-    - De cada segmento elige el fotograma más nítido (máxima varianza de Laplaciano).
-    """
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise RuntimeError("No se pudo abrir el vídeo.")
@@ -42,15 +37,12 @@ def extract_best_frames(video_path, thresh=0.35, min_gap_sec=8):
         score = float(diff.mean())
 
         if score > thresh and (idx - last_key_idx) > min_gap_frames:
-            # Cierra segmento anterior
             if best_frame is not None:
                 chosen.append(best_frame)
-            # Nuevo segmento
             best_frame = frame
             best_sharp = sharpness(gray)
             last_key_idx = idx
         else:
-            # Sigue dentro del mismo segmento: quedarnos con el más nítido
             s = sharpness(gray)
             if s > best_sharp:
                 best_sharp = s
